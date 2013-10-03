@@ -158,7 +158,12 @@ struct ir_command {
   unsigned char eventId;
 };
 
+#ifdef WIN32
+static CAddress my_addr = CAddress("127.0.0.1");
+#else
 static CAddress my_addr;
+#endif
+
 static int sockfd;
 
 static CPacketBUTTON* button_map[0xff];
@@ -295,7 +300,10 @@ static usb_dev_handle *get_ir(void)
 		}
 
 		/* interface is normally handled by hiddev */
+		#ifdef LIBUSB_HAS_DETACH_KERNEL_DRIVER_NP
 		usb_detach_kernel_driver_np(ir, 0);
+		#endif
+		
 		if (usb_claim_interface(ir, 0)) {
 			fprintf(stderr, "error claiming interface, are you root?\n");
 			exit(2);
@@ -892,7 +900,7 @@ int main(int argc, char **argv) {
       }
       keydown = 1;
       
-    } else if(result == -110) {
+    } else if(result == -110 || result == -116) { //Windows timeout code is -116
       // timeout, reset led
       keydown = 0;                        
       set_led(idle_mode);
